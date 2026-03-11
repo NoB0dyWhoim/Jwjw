@@ -36,8 +36,7 @@ navigator.mediaDevices.getUserMedia({ video: true })
 // tombol ambil foto
 button.onclick = async () => {
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    
 
     const ctx = canvas.getContext("2d");
     ctx.drawImage(video,0,0);
